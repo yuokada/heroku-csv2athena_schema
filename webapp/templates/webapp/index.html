@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Top{% endblock %}
+
+{% block content %}
+    <h3 class="mb-4 h3">Analyze CSV file & Generate Athena schema</h3>
+
+    <form method="post" enctype="multipart/form-data">
+        <div class="form-inline">
+            <label for="schema" class="col-sm-2 col-form-label">schema name</label>
+            <input name="schema" class="form-control" style="width:200px;"
+                   value="{% if request.POST.schema %}{{ request.POST.schema }}{% else %}{{ "demoschema" }}{% endif %}"
+                   placeholder="schema name">
+        </div>
+
+        <div class="form-inline">
+            <label for="title" class="col-sm-2 col-form-label">Data Location</label>
+            {% if request.POST.location %}
+                <input name="location" class="form-control" style="width: 400px" value="{{ request.POST.location }}"
+                       placeholder="s3://path/to/directory" required>
+            {% else %}
+                <input name="location" class="form-control" style="width: 400px" value=""
+                       placeholder="s3://path/to/directory" required>
+            {% endif %}
+        </div>
+
+        <div class="form-inline">
+            <label for="title" class="col-sm-2 col-form-label">Serde</label>
+            <select name="serde" class="form-control custom-select">
+                <option value="org.apache.hadoop.hive.serde2.OpenCSVSerde" selected>
+                    org.apache.hadoop.hive.serde2.OpenCSVSerde
+                </option>
+                <option value='org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'>
+                    org.apache.hadoop.hive.serde2.LazySimpleSerDe
+                </option>
+                <option value='org.apache.hadoop.hive.serde2.RegexSerDe'>
+                    org.apache.hadoop.hive.serde2.RegexSerDe
+                </option>
+            </select>
+        </div>
+
+        <div class="form-inline">
+            <label for="title" class="col-sm-2 col-form-label">Serde Properties (Option)</label>
+            <label>
+                <input type="text" class="form-control" name="serde_properties" placeholder="key=value">
+                <button class="btn btn-info"><i class="fa fa-plus mr-2"></i>Plus</button>
+            </label>
+        </div>
+
+        <div class="form-inline">
+            <label for="title" class="col-sm-2 col-form-label">STORED</label><br>
+            <label>
+                <select name="stored_as" class="custom-select">
+                    <option value="TEXTFILE" selected>TEXTFILE</option>
+                    <option value="SEQUENCEFILE">SEQUENCEFILE</option>
+                    <option value="ORC">ORC</option>
+                    <option value="RCFILE">RCFILE</option>
+                    <option value="PARQUET">PARQUET</option>
+                    <option value="AVRO">AVRO</option>
+                </select>
+            </label>
+        </div>
+
+        <div class="form-inline">
+            <label for="table-props" class="col-sm-2 col-form-label" for="title">Table Properties (Option)</label>
+            <label>
+                <input type="text" class="form-control" name="table_properties" placeholder="key=value">
+                <button class="btn btn-info"><i class="fa fa-plus mr-2"></i>Plus</button>
+            </label>
+        </div>
+
+        <div class="form-inline form-check-inline">
+            <!-- https://qiita.com/ynakahira/items/46d44793827920282f75 -->
+            <label for="csv file" class="col-sm-2 col-form-label">CSV FILE</label>
+            <label>
+                <span class="btn btn-info">
+                    Choose File <input type="file" class="form-control form-control-file" name="csvfile"
+                                       style="display:none" required>
+                </span>
+            </label>
+{#                            <input type="text" class="form-control" readonly="">#}
+        </div>
+
+        <br>
+        <div class="form-inline">
+            <label for="submit" class="col-sm-6 col-form-label" style="display: none;">Submit</label>
+            <div id="table-properties" class="col-md-12 text-center">
+                <input type="submit" class="form-control btn btn-primary" role="button" value="Create Schema">
+            </div>
+        </div>
+        {% csrf_token %}
+    </form>
+    <hr>
+    {% if ct %}
+        <div class="center">
+            <div class="alert alert-primary">
+                <span class="navbar-brand mb-0 h1">Success!</span>
+                <textarea class="form-control" rows="{{ 16 }}" autofocus>{{ ct }}</textarea>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
