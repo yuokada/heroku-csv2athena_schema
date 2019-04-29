@@ -12,19 +12,6 @@ from webapp.forms import UploadFileForm, form2obj
 # login_url = '/login/'
 
 
-class IndexView(FormView):
-    template_name = 'webapp/index.html'
-
-    def get_initial(self):
-        return super().get_initial()
-
-    def form_valid(self, form):
-        return super().form_valid(form)
-
-    # def get(self, request, *args, **kwargs):
-    #     return super().get(request, *args, **kwargs)
-
-
 def index_view(request):
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
