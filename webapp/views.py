@@ -3,7 +3,7 @@ import tempfile
 from django.shortcuts import render
 from django.views.generic import FormView
 
-import webapp.csv2athena
+import webapp.csv2athena as csv2athena
 from webapp.forms import UploadFileForm, form2obj
 
 
