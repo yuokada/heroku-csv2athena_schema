@@ -1,6 +1,6 @@
 from typing import Dict
 
-from attr import dataclass
+from dataclasses import dataclass
 from django import forms
 
 
