@@ -9,9 +9,7 @@ Django = "==2.1.7"
 django-debug-toolbar = "==1.11"
 djangorestframework = ">=3.7.7"
 pytz = "==2018.9"
-requests = "*"
 messytables = "==0.15.2"
-Jinja2 = "==2.10"
 
 [requires]
 python_version = "3.7"
