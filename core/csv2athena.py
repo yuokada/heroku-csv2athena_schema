@@ -8,9 +8,8 @@ Require
 import argparse
 import logging
 import os
-import textwrap
 
-import jinja2
+from django.template import loader
 from messytables import CSVTableSet, offset_processor, headers_guess, type_guess, types_processor, headers_processor
 from messytables.types import IntegerType, CellType, BoolType, StringType, DateType, DateUtilType, FloatType, \
     DecimalType
@@ -35,12 +34,6 @@ class StoreDictKeyPair(argparse.Action):
             k, v = kv.split("=")
             properties[k] = v
         setattr(namespace, self.dest, properties)
-
-
-def guess_csv_datatype(filename):
-    with open(filename, 'rb') as fh:
-        d = _guess_csv_datatype(fh)
-    return d
 
 
 def _guess_csv_datatype(fh):
@@ -86,11 +79,17 @@ def convert_presto_data_type(datatype: CellType) -> str:
 
 
 def convert_fields(guess_data, serde):
+    """
+    # NOTE: OpenCSVSerde treat with STRING only.
+    # NOTE: https://docs.aws.amazon.com/ja_jp/athena/latest/ug/serde-reference.html
+
+    :param guess_data:
+    :param serde:
+    :return:
+    """
     fields = []
     for k, v in guess_data.items():
-        # NOTE: https://docs.aws.amazon.com/ja_jp/athena/latest/ug/serde-reference.html
         if serde == 'org.apache.hadoop.hive.serde2.OpenCSVSerde':
-            # NOTE: OpenCSVSerde treat with STRING only.
             x = 'STRING'
         else:
             x = convert_presto_data_type(v)
@@ -102,71 +101,25 @@ def get_filename(filename):
     return os.path.splitext(os.path.basename(filename))[0]
 
 
-def build_ct(guess_data, arguments) -> str:
-    t = textwrap.dedent("""
-    CREATE EXTERNAL TABLE {{ schema }} (
-      {{table_fields|join(",\n      ")}}
-    )
-    ROW FORMAT SERDE '{{ serde }}'
-    WITH SERDEPROPERTIES (
-    {%- if serde_properties -%}
-    {% for k, v in serde_properties.items() %}
-        {{ "'%s' = '%s'" |format(k, v) }} {%- if not loop.last -%} , {%- endif -%}
-    {% endfor %}
-    {% else %}
-      -- default
-      'separatorChar' = ',',
-      'quoteChar' = '\\"',
-      'escapeChar' = '\\\\'
-    {% endif -%}
-    )
-    STORED AS {{ stored_as }}
-    LOCATION '{{ location }}'
-    TBLPROPERTIES (
-    {%- if table_properties -%}
-    {% for k, v in table_properties.items() %}
-        {{ "'%s'='%s'" |format(k, v) }} {%- if not loop.last -%} , {%- endif -%}
-    {% endfor %}
-    {% else %}
-    -- default
-      'skip.header.line.count'='1',
-      'has_encrypted_data'='false'
-    {% endif -%}
-    );
-    """)
+def build_ct(guess_data, post_form) -> str:
     # 1. csv -> Athena field type
-    fields = convert_fields(guess_data, arguments.serde)
+    fields = convert_fields(guess_data, post_form['serde'].data)
 
     # 2. tablename
-    if arguments.schema:
-        tablename = arguments.schema + "." + get_filename(arguments.csvfile)
+    if post_form['schema'].data is not None:
+        tablename = post_form['schema'].data + "." + get_filename(post_form['csvfile'].data.name)
     else:
-        tablename = get_filename(arguments.csvfile)
+        tablename = get_filename(post_form['csvfile'].data.name)
 
-    template = jinja2.Template(t)
-    ct = template.render(
+    arguments = dict(
         schema=tablename,
         table_fields=fields,
-        serde=arguments.serde,
-        serde_properties=arguments.serde_properties,
-        location=arguments.location,
-        stored_as=arguments.stored_as,
-        table_properties=arguments.table_properties,
+        serde=post_form['serde'].data,
+        # serde_properties=post_form['serde_properties'].data,
+        serde_properties=dict(),
+        location=post_form['location'].data,
+        stored_as=post_form['stored_as'].data,
+        # table_properties=post_form['table_properties'].data,
+        table_properties=dict(),
     )
-    return ct
-
-
-def main():
-    parser = argparse.ArgumentParser('csv2schema')
-    parser.add_argument('--schema', type=str, required=False)
-    parser.add_argument('--serde-properties', dest="serde_properties", action=StoreDictKeyPair, nargs='+', metavar="KEY=VAL")
-    parser.add_argument('--location', type=str, default='s3://your_bucket/path/to/files', help='path to s3 url')
-    parser.add_argument('--table-properties', dest="table_properties", action=StoreDictKeyPair, nargs='+', metavar="KEY=VAL")
-
-    parser.add_argument('csvfile', type=str, metavar='FILE')
-
-    arguments = parser.parse_args()
-    guess_result = guess_csv_datatype(arguments.csvfile)
-
-    ct = build_ct(guess_result, arguments)
-    print(ct)
+    return loader.render_to_string('core/ct.sql', arguments)

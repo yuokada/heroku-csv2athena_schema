@@ -31,15 +31,3 @@ class UploadFileForm(forms.Form):
     # NOTE: Adhoc code
     table_properties = []
     serde_properties = []
-
-
-def form2obj(frm: UploadFileForm) -> FormArgument:
-    return FormArgument(
-        schema=frm['schema'].data,
-        serde=frm['serde'].data,
-        location=frm['location'].data,
-        csvfile=frm['csvfile'].data.name,
-        serde_properties=dict(),
-        stored_as=frm['stored_as'].data,
-        table_properties=dict(),
-    )
