@@ -101,3 +101,18 @@
         </div>
     {% endif %}
 {% endblock %}
+
+{% block vue-script %}
+    <script>
+        var v2 = new Vue({
+            delimiters: ["[[", "]]"],
+            el: "#form-serde-properties",
+            data: {
+                parameters: [
+                    "foo=1",
+                    "bar=2",
+                ]
+            }
+        })
+    </script>
+{% endblock %}
