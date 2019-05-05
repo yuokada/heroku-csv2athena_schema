@@ -1,33 +1,26 @@
 {% extends "base.html" %}
-
 {% block title %}Top{% endblock %}
-
 {% block content %}
-    <h3 class="mb-4 h3">Analyze CSV file & Generate Athena schema</h3>
+    <h3 class="mb-4 h3" >Analyze CSV file & Generate Athena schema</h3>
 
-    <form method="post" enctype="multipart/form-data">
+    <form v-on:submit.prevent="createSchema" id="form-create-schema">
         <div class="form-inline">
-            <label for="schema" class="col-sm-2 col-form-label">schema name</label>
-            <input name="schema" class="form-control" style="width:200px;"
-                   value="{% if request.POST.schema %}{{ request.POST.schema }}{% else %}{{ "demoschema" }}{% endif %}"
-                   placeholder="schema name">
+            <label for="schema" class="col-sm-2 col-form-label">schema . table</label>
+            <input name="schema" class="form-control" style="width:160px;" minlength="3" placeholder="schema name" v-model="schema">
+            <span> . </span>
+            <input name="table" class="form-control" style="width:160px;" minlength="3" placeholder="table name" v-model="table" required>
         </div>
 
         <div class="form-inline">
             <label for="title" class="col-sm-2 col-form-label">Data Location</label>
-            {% if request.POST.location %}
-                <input name="location" class="form-control" style="width: 400px" value="{{ request.POST.location }}"
-                       placeholder="s3://path/to/directory" required>
-            {% else %}
-                <input name="location" class="form-control" style="width: 400px" value=""
-                       placeholder="s3://path/to/directory" required>
-            {% endif %}
+            <input name="location" class="form-control" style="width: 400px"
+                   placeholder="s3://path/to/directory" v-model="data_location" minlength="6" required>
         </div>
 
         <div class="form-inline">
             <label for="title" class="col-sm-2 col-form-label">Serde</label>
-            <select name="serde" class="form-control custom-select">
-                <option value="org.apache.hadoop.hive.serde2.OpenCSVSerde" selected>
+            <select name="serde" class="form-control custom-select" v-model="serde">
+                <option value="org.apache.hadoop.hive.serde2.OpenCSVSerde">
                     org.apache.hadoop.hive.serde2.OpenCSVSerde
                 </option>
                 <option value='org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'>
@@ -43,7 +36,7 @@
         <div class="form-inline">
             <label for="title" class="col-sm-2 col-form-label">Serde Properties (Option)</label>
             <label id="form-serde-properties">
-                <input type="text" class="form-control" name="serde_properties" placeholder="key=value">
+                <input type="text" class="form-control" name="serde_properties" placeholder="key=value" disabled>
                 <button class="btn btn-info"><i class="fa fa-plus mr-2"></i>Plus</button>
             </label>
         </div>
@@ -51,8 +44,8 @@
         <div class="form-inline">
             <label for="title" class="col-sm-2 col-form-label">STORED</label><br>
             <label>
-                <select name="stored_as" class="custom-select">
-                    <option value="TEXTFILE" selected>TEXTFILE</option>
+                <select name="stored_as" class="custom-select" v-model="stored">
+                    <option value="TEXTFILE">TEXTFILE</option>
                     <option value="SEQUENCEFILE">SEQUENCEFILE</option>
                     <option value="ORC">ORC</option>
                     <option value="RCFILE">RCFILE</option>
@@ -65,7 +58,7 @@
         <div class="form-inline">
             <label for="table-props" class="col-sm-2 col-form-label">Table Properties (Option)</label>
             <label>
-                <input type="text" class="form-control" name="table_properties" placeholder="key=value">
+                <input type="text" class="form-control" name="table_properties" placeholder="key=value" disabled>
                 <button class="btn btn-info"><i class="fa fa-plus mr-2"></i>Plus</button>
             </label>
         </div>
@@ -76,43 +69,96 @@
             <label>
                 <span class="btn btn-info">
                     Choose File <input type="file" class="form-control form-control-file" name="csvfile"
+                                       v-on:change="selectedFile"
                                        style="display:none" required>
                 </span>
             </label>
-{#                            <input type="text" class="form-control" readonly="">#}
         </div>
-
         <br>
         <div class="form-inline">
             <label for="submit" class="col-sm-6 col-form-label" style="display: none;">Submit</label>
             <div id="table-properties" class="col-md-12 text-center">
-                <input type="submit" class="form-control btn btn-primary" role="button" value="Create Schema">
+                <button type="submit" class="form-control btn btn-primary" role="button" v-on:click="createSchema">
+                    Create Schema
+                </button>
             </div>
         </div>
-        {% csrf_token %}
-    </form>
     <hr>
-    {% if ct %}
-        <div class="center">
+        <div class="center" v-if="ct">
             <div class="alert alert-primary">
                 <span class="navbar-brand mb-0 h1">Success!</span>
-                <textarea class="form-control" rows="{{ 16 }}" autofocus>{{ ct }}</textarea>
+                <textarea class="form-control" v-model="ct" v-bind:rows="calcTextareaSize" autofocus></textarea>
             </div>
         </div>
-    {% endif %}
+    </form>
 {% endblock %}
 
 {% block vue-script %}
     <script>
-        var v2 = new Vue({
+        var vapp = new Vue({
             delimiters: ["[[", "]]"],
-            el: "#form-serde-properties",
-            data: {
-                parameters: [
-                    "foo=1",
-                    "bar=2",
-                ]
+            el: "#form-create-schema",
+            data() {
+                return {
+                    // Request Parameter
+                    schema: "",
+                    table: "",
+                    data_location: "",
+                    serde: "org.apache.hadoop.hive.serde2.OpenCSVSerde",
+                    serde_properties: [],
+                    stored: "TEXTFILE",
+                    table_properties: [],
+                    csvfile: "",
+                    // Results
+                    ct: "",
+                    ct_len: 0
+                }
+            },
+            computed: {
+                calcTextareaSize: function () {
+                    console.debug("Called calcTextareaSize");
+                    if (this.ct) {
+                        return this.ct.split("\n").length;
+                    } else {
+                        return 16;
+                    }
+                }
+            },
+            methods: {
+                selectedFile: function (e) {
+                    var self = this;
+                    console.log("file upload handler start!");
+                    e.preventDefault();
+                    let files = e.target.files;
+                    this.uploadFile = files[0];
+                    var reader = new FileReader();
+                    reader.onload = (e) => {
+                        console.debug("start onload function");
+                        self.csvfile = reader.result;
+                    };
+                    reader.readAsText(this.uploadFile);
+                },
+                createSchema: function () {
+                    console.info("Pushed button createSchema!");
+                    axios.post('/api/analyzer', {
+                            schema: this.schema,
+                            data_location: this.data_location,
+                            serde: this.serde,
+                            serde_properties: [],
+                            stored: this.stored,
+                            table_properties: [],
+                            csv_file: this.csvfile,
+                    })
+                        .then(function (response) {
+                            this.ct = response.data.ddl;
+                        }.bind(this))
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+
+                }
             }
-        })
+        });
+        window.vapp = vapp;
     </script>
 {% endblock %}

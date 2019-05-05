@@ -27,7 +27,7 @@ def index_view(request):
                            'serde_properties': form.serde_properties})
     else:
         form = UploadFileForm()
-    return render(request, 'webapp/index.html', {'form': form})
+    return render(request, 'webapp/vue-index.html', {'form': form})
 
 
 def handle_uploaded_file(f):
