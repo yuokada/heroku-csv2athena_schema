@@ -1,0 +1,9 @@
+User-agent: *
+Disallow: /entry.count
+Disallow: /entry/button/
+Disallow: /entry/jsonlite
+Disallow: /guide/bbutton?url=*
+
+User-agent: Slurp
+Disallow: /
+
