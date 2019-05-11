@@ -21,6 +21,7 @@
 
 - [フォーム入力バインディング — Vue.js](https://jp.vuejs.org/v2/guide/forms.html#%E3%82%B3%E3%83%B3%E3%83%9D%E3%83%BC%E3%83%8D%E3%83%B3%E3%83%88%E3%81%AE-v-model "フォーム入力バインディング — Vue.js")
 
+<!--
 
 ## TODO
 
@@ -41,3 +42,5 @@
 
 - [Creating a Vue.js File Reader Component Using the FileReader API](https://alligator.io/vuejs/file-reader-component/ "Creating a Vue.js File Reader Component Using the FileReader API")
 - [javascript - Convert file to base64 and add v-model support in Vuejs - Stack Overflow](https://stackoverflow.com/questions/53944112/convert-file-to-base64-and-add-v-model-support-in-vuejs "javascript - Convert file to base64 and add v-model support in Vuejs - Stack Overflow")
+
+-->
