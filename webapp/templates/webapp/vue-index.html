@@ -73,6 +73,7 @@
                                        style="display:none" required>
                 </span>
             </label>
+            <input type="text" class="form-control" readonly="" v-model="display_filename">
         </div>
         <br>
         <div class="form-inline">
@@ -109,6 +110,7 @@
                     stored: "TEXTFILE",
                     table_properties: [],
                     csvfile: "",
+                    display_filename: "",
                     // Results
                     ct: "",
                     ct_len: 0
@@ -135,6 +137,7 @@
                     reader.onload = (e) => {
                         console.debug("start onload function");
                         self.csvfile = reader.result;
+                        this.display_filename=this.uploadFile.name;
                     };
                     reader.readAsText(this.uploadFile);
                 },
