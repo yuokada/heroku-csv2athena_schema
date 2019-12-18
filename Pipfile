@@ -10,6 +10,7 @@ pytz = "==2018.9"
 messytables = "==0.15.2"
 djangorestframework = ">=3.7.7"
 django-werkzeug-debugger-runserver= "==0.3.1"
+django-debug-toolbar = "==2.1"
 
 [dev-packages]
 django-debug-toolbar = "==2.1"
