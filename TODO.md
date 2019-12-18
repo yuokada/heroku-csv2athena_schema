@@ -49,3 +49,28 @@ Update Pipfile.lock
 $ export LDFLAGS="-L/usr/local/opt/openssl/lib" ; export CPPFLAGS="-I/usr/local/opt/openssl/include"
 $ pipenv update
 ```
+
+
+## Django-Debug-toolbar
+
+```python
+from django.conf import settings
+import os
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+
+DEBUG = True
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
+}
+
+# settings.INSTALLED_APPS.append('debug_toolbar')
+# settings.MIDDLEWARE.append('debug_toolbar.middleware.DebugToolbarMiddleware')
+
+INTERNAL_IPS = [
+    '127.0.0.1',
+]
+```
