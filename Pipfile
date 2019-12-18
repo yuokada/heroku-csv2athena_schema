@@ -12,7 +12,7 @@ djangorestframework = ">=3.7.7"
 django-werkzeug-debugger-runserver= "==0.3.1"
 
 [dev-packages]
-django-debug-toolbar = "==1.11"
+django-debug-toolbar = "==2.1"
 
 [requires]
 python_version = "3.7"
