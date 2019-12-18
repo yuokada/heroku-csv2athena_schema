@@ -29,7 +29,7 @@
 - [X] validation
     - [django REST frameworkでバリデーション - Qiita](https://qiita.com/ryoo17/items/326f8adda8423abf1ce4 "django REST frameworkでバリデーション - Qiita")
 
-### vue.js 
+### vue.js
 
 - [X] file upload
 - [X] base64
@@ -40,3 +40,12 @@
 
 - [Creating a Vue.js File Reader Component Using the FileReader API](https://alligator.io/vuejs/file-reader-component/ "Creating a Vue.js File Reader Component Using the FileReader API")
 - [javascript - Convert file to base64 and add v-model support in Vuejs - Stack Overflow](https://stackoverflow.com/questions/53944112/convert-file-to-base64-and-add-v-model-support-in-vuejs "javascript - Convert file to base64 and add v-model support in Vuejs - Stack Overflow")
+
+
+## pipenv
+
+Update Pipfile.lock
+```
+$ export LDFLAGS="-L/usr/local/opt/openssl/lib" ; export CPPFLAGS="-I/usr/local/opt/openssl/include"
+$ pipenv update
+```
